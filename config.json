@@ -1,16 +1,22 @@
 {
+    "contig_communities":{
+        "asssembly_order":["GRC38", 
+                           "Clint_PTRv2", 
+                           "Mhudiblu_PPA_v2", 
+                           "Kamilah_GGO_v0"],
+        "communities":{
+            "chr7": ["CM000669.2",
+                     "NC_036886.1",
+                     "CM023034.3",
+                     "CM017854.1"]                     
+        }
+    },
     "assemblies":{
         "GRC38":{
             "genbank_accession":"GCA_000001405.28",
             "species":"human",
             "fn_fna":"GCA_000001405.28_GRCh38.p13_genomic.fna.gz",
             "fn_ftp":"https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.28_GRCh38.p13/GCA_000001405.28_GRCh38.p13_genomic.fna.gz",
-        },
-        "chm13.1":{
-            "genbank_accession":"GCA_002884485.1",
-            "species":"human",
-            "fn_fna":"GCA_002884485.1_CHM13_HSA_v1_genomic.fna.gz",
-            "fn_ftp":"https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/002/884/485/GCA_002884485.1_CHM13_HSA_v1/GCA_002884485.1_CHM13_HSA_v1_genomic.fna.gz"
         },
         "Clint_PTRv2":{
             "genbank_accession":"GCA_002880755.3",
@@ -36,6 +42,12 @@
             "genbank_accession":"GCA_002880775.3",
             "species":"sumatran_orangutan",
             "fa":"https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/002/880/775/GCA_002880775.3_Susie_PABv2/GCA_002880775.3_Susie_PABv2_genomic.fna.gz"
-        }
+        },
+        "ASM1689442v1":{
+            "genbank_accession":"GCA_016894425.1",
+            "species":"human",
+            "fn_fna":"???",
+            "fn_ftp":"????"
+        },
     }
 }
