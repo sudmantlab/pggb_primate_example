@@ -21,13 +21,15 @@ rule run_pggb:
         outdir = "data/out.{contig}.{seg_len}".format(contig=wildcards.contig,
                                                       seg_len=wildcards.seg_len) 
         cmd = ("singularity "
-               "run -B {PWD}/data:/data {pggb_path} "
+               "run -B {PWD}/data:/data "
+               "-H {PWD} "
+               "{pggb_path} "
                "\"pggb -i /{fa_input} "
                "-p 95 "
                "-s {seg_len} "
                "-n 4 "
                "-t 24 "
-               "-o {outdir} "
+               "-o /{outdir} "
                #"-M -C cons,100,1000,10000 -m\""
                "-M -m\""
                "".format(pggb_path=pggb_path,
