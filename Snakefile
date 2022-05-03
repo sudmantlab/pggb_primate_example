@@ -1,42 +1,45 @@
-
-
-
 configfile: "config.json"
-
 
 
 rule all:
     input:
-        "data/out/multiqc_config.yaml"
+        "data/out.chr6.10000/multiqc_config.yaml",
+        "data/out.chr7.10000/multiqc_config.yaml"
+        #"data/out.chr6.50000/multiqc_config.yaml",
+        #"data/out.chr7.50000/multiqc_config.yaml"
        
 rule run_pggb:
     input:
-        fa_in="data/input.fa.gz"
+        fa_input="data/{contig}.input.fa.gz"
         #fa_idx="data/input.fa.fai"
     output:
-        out="data/out/multiqc_config.yaml"
+        #out="data/out/multiqc_config.yaml"
+        out="data/out.{contig}.{seg_len}/multiqc_config.yaml"
     run:
         pggb_path="/global/scratch2/psudmant/software/pggp/pggb_curr"
         PWD="/global/scratch2/psudmant/projects/pggb/pggb_primate_example"
+        outdir = "data/out.{contig}.{seg_len}".format(contig=wildcards.contig,
+                                                      seg_len=wildcards.seg_len) 
         cmd = ("singularity "
-               #"run -B ${{PWD}}/data:/data {pggb_path} "
                "run -B {PWD}/data:/data {pggb_path} "
-               "\"pggb -i /data/input.fa.gz "
+               "\"pggb -i /{fa_input} "
                "-p 95 "
-               "-s 50000 "
+               "-s {seg_len} "
                "-n 4 "
                "-t 24 "
-               "-o /data/out "
+               "-o {outdir} "
                #"-M -C cons,100,1000,10000 -m\""
                "-M -m\""
                "".format(pggb_path=pggb_path,
+                         fa_input = input.fa_input,
+                         seg_len = wildcards.seg_len,
+                         outdir=outdir,
                          PWD=PWD))
         print(cmd)
         shell(cmd)
         """
         Singularity> smoothxg -t 24 -T 24 -g /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.smooth.1.gfa -w 18028 -X 100 -I .8500 -R 0 -j 0 -e 0 -l 4507 -P 1,19,39,3,81,1 -O 0.03 -Y 400 -d 0 -D 0 -m /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.smooth.maf -Q Consensus_ -C /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.cons,cons,100,1000,10000 -o /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.smooth.gfa
         """
-
 
 def get_fa_idxs(wildcards):
     inputs = []
@@ -53,30 +56,30 @@ rule make_input_fa:
     input:
         get_fa_idxs
     output:
-        fa_out="data/input.fa.gz"
+        #fa_out="data/input.fa.gz"
+        fa_out="data/{contig}.input.fa.gz"
     run:
         fastix="/global/home/users/psudmant/code/fastix/target/debug/fastix"
         fastatools="~/code/fastatools/target/debug/fastatools"
         shell("> {fa_out}".format(fa_out=output.fa_out.replace(".gz","")))
         assemblies = config['contig_communities']['asssembly_order']
-        for contig_com, contigs in config['contig_communities']['communities'].items():
-            for i,contig in enumerate(contigs):
-                curr_assembly = assemblies[i] 
-                fn_fna=config['assemblies'][curr_assembly]['fn_fna'].replace(".gz","")
-                shell("{fastatools} "
-                      "extract "
-                      "data/input_genomes/{g}/{fn_fna} "
-                      "{contig} | "
-                      "{fastix} "
-                      "--prefix {g}# "
-                      "/dev/stdin "
-                      ">>{fa_out}"
-                      "".format(fn_fna=fn_fna,
-                                fastix=fastix,
-                                fastatools=fastatools,
-                                contig=contig,
-                                g=curr_assembly,
-                                fa_out=output.fa_out.replace(".gz","")))
+        for i, contig in enumerate(config['contig_communities']['communities'][wildcards.contig]):
+            curr_assembly = assemblies[i] 
+            fn_fna=config['assemblies'][curr_assembly]['fn_fna'].replace(".gz","")
+            shell("{fastatools} "
+                  "extract "
+                  "data/input_genomes/{g}/{fn_fna} "
+                  "{contig} | "
+                  "{fastix} "
+                  "--prefix {g}# "
+                  "/dev/stdin "
+                  ">>{fa_out}"
+                  "".format(fn_fna=fn_fna,
+                            fastix=fastix,
+                            fastatools=fastatools,
+                            contig=contig,
+                            g=curr_assembly,
+                            fa_out=output.fa_out.replace(".gz","")))
         shell("bgzip {fa_out}".format(fa_out = output.fa_out.replace(".gz","")))
         shell("samtools faidx {fa_out}".format(fa_out = output.fa_out))
 

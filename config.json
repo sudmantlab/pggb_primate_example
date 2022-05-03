@@ -5,10 +5,14 @@
                            "Mhudiblu_PPA_v2", 
                            "Kamilah_GGO_v0"],
         "communities":{
+            "chr6": ["CM000668.2",
+                     "NC_036885.1",
+                     "CM023033.3",
+                     "CM017853.1"],
             "chr7": ["CM000669.2",
                      "NC_036886.1",
                      "CM023034.3",
-                     "CM017854.1"]                     
+                     "CM017854.1"]
         }
     },
     "assemblies":{
