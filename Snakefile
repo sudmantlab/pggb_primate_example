@@ -1,19 +1,88 @@
 configfile: "config.json"
 
 
+
+
+def get_extract_loci(wildcards):
+    
+    inputs = []
+
+    for locus, inf in config['extract_loci'].items():
+        print(inf)
+        inputs.append("data/{graph_path}/{locus}/{locus}.sorted.png"
+                      "".format(graph_path = inf['graph_path'],
+                                locus = locus))
+    return inputs
+
 rule all:
+    input:
+        get_extract_loci
+        #"data/out.chr6.10000/multiqc_config.yaml",
+        #"data/out.chr7.10000/multiqc_config.yaml"
+        #"data/chr7.input.fa.gz",
+        #"data/chr6.input.fa.gz"
+
+
+rule extract_locus:
     input:
         "data/out.chr6.10000/multiqc_config.yaml",
         "data/out.chr7.10000/multiqc_config.yaml"
-        #"data/out.chr6.50000/multiqc_config.yaml",
-        #"data/out.chr7.50000/multiqc_config.yaml"
-       
+    output:
+        png="data/{contig}/{target}/{target}.sorted.png",
+        subgraph="data/{contig}/{target}/{target}.og",
+        sorted_subgraph="data/{contig}/{target}/{target}.sorted.og"
+    run:
+        pggb_path="/global/scratch2/psudmant/software/pggp/pggb_curr"
+        PWD="/global/scratch2/psudmant/projects/pggb/pggb_primate_example"
+        locus = config["extract_loci"][wildcards.target]["locus"] 
+        graph = config["extract_loci"][wildcards.target]["graph"] 
+        
+        cmd = ("singularity "
+               "run -B {PWD}/data:/data "
+               "-H {PWD} "
+               "{pggb_path} "
+               "\"odgi extract -E -i /{graph} -o /{subgraph} -r {locus}\""
+               "".format(pggb_path=pggb_path,
+                         PWD=PWD,
+                         locus=locus,
+                         graph=graph,
+                         subgraph=output.subgraph))
+        print(cmd)
+        shell(cmd)
+        cmd = ("singularity "
+               "run -B {PWD}/data:/data "
+               "-H {PWD} "
+               "{pggb_path} "
+               "\"odgi sort -O -Y -i /{subgraph} -o /{sorted_subgraph}\""
+               "".format(pggb_path=pggb_path,
+                         PWD=PWD,
+                         subgraph=output.subgraph,
+                         sorted_subgraph=output.sorted_subgraph))
+        print(cmd)
+        shell(cmd)
+
+        cmd = ("singularity "
+               "run -B {PWD}/data:/data "
+               "-H {PWD} "
+               "{pggb_path} "
+               "\"odgi viz -i /{sorted_subgraph} -o /{png}\""
+               "".format(pggb_path=pggb_path,
+                         PWD=PWD,
+                         sorted_subgraph=output.sorted_subgraph,
+                         png=output.png))
+        print(cmd)
+        shell(cmd)
+
+        #"odgi extract -E -i /data/out.chr7.10000/chr7.input.fa.gz.e6f73d2.e34d4cd.20398a9.smooth.final.og -o /data/out.chr7.10000/SAMD9_locus_Clint.og -r Clint_PTRv2#NC_036886.1:89120280-89210088"
+        #"odgi sort -O -Y  -i /data/out.chr7.10000/SAMD9_locus_Clint.og -o /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og"
+        #"odgi viz -i /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og -o /data/out.chr7.10000/SAMD9_locus.sorted.png"
+        #"odgi layout -i /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og -o /data/out.chr7.10000/SAMD9_locus_Clint.sorted.lay"
+        #"odgi draw -c /data/out.chr7.10000/SAMD9_locus_Clint.sorted.lay -i /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og -p /data/out.chr7.10000/SAMD9_locus_Clint.2d.png -C"
+
 rule run_pggb:
     input:
         fa_input="data/{contig}.input.fa.gz"
-        #fa_idx="data/input.fa.fai"
     output:
-        #out="data/out/multiqc_config.yaml"
         out="data/out.{contig}.{seg_len}/multiqc_config.yaml"
     run:
         pggb_path="/global/scratch2/psudmant/software/pggp/pggb_curr"
@@ -39,15 +108,15 @@ rule run_pggb:
                          PWD=PWD))
         print(cmd)
         shell(cmd)
-        """
-        Singularity> smoothxg -t 24 -T 24 -g /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.smooth.1.gfa -w 18028 -X 100 -I .8500 -R 0 -j 0 -e 0 -l 4507 -P 1,19,39,3,81,1 -O 0.03 -Y 400 -d 0 -D 0 -m /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.smooth.maf -Q Consensus_ -C /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.cons,cons,100,1000,10000 -o /data/out//input.fa.gz.c55a916.7bdde5a.2a74e36.smooth.gfa
-        """
+
 
 def get_fa_idxs(wildcards):
     inputs = []
     for g, info in config['assemblies'].items():
-        inputs.append("data/input_genomes/{g}/idx.txt"
-                      "".format(g=g))
+
+        inputs.append("data/input_genomes/{g}/{fn_fna}.fai"
+                      "".format(g=g,
+                                fn_fna=info['fn_fna']))
     return(inputs)
 
 """
@@ -58,77 +127,56 @@ rule make_input_fa:
     input:
         get_fa_idxs
     output:
-        #fa_out="data/input.fa.gz"
         fa_out="data/{contig}.input.fa.gz"
     run:
         fastix="/global/home/users/psudmant/code/fastix/target/debug/fastix"
-        fastatools="~/code/fastatools/target/debug/fastatools"
         shell("> {fa_out}".format(fa_out=output.fa_out.replace(".gz","")))
         assemblies = config['contig_communities']['asssembly_order']
         for i, contig in enumerate(config['contig_communities']['communities'][wildcards.contig]):
             curr_assembly = assemblies[i] 
-            fn_fna=config['assemblies'][curr_assembly]['fn_fna'].replace(".gz","")
-            shell("{fastatools} "
-                  "extract "
-                  "data/input_genomes/{g}/{fn_fna} "
+            fn_fa=config['assemblies'][curr_assembly]['fn_fna']
+            shell("samtools faidx "
+                  "data/input_genomes/{g}/{fn_fa} "
                   "{contig} | "
                   "{fastix} "
                   "--prefix {g}# "
                   "/dev/stdin "
                   ">>{fa_out}"
-                  "".format(fn_fna=fn_fna,
+                  "".format(fn_fa=fn_fa,
                             fastix=fastix,
-                            fastatools=fastatools,
                             contig=contig,
                             g=curr_assembly,
                             fa_out=output.fa_out.replace(".gz","")))
         shell("bgzip {fa_out}".format(fa_out = output.fa_out.replace(".gz","")))
         shell("samtools faidx {fa_out}".format(fa_out = output.fa_out))
 
-"""        
-rule index_fa:
-    input:
-        fa_in="data/input.fa.gz"
-    output: 
-        fa_idx="data/input.fa.fai"
-    shell:
-        "samtools faidx {input.fa_in}"
-"""        
 
 def get_fa(wildcards):
     inputs = []
     inf = config['assemblies'][wildcards.g]
     ret = ("data/input_genomes/{g}/{fa}"
            "".format(g=wildcards.g,
-                    fa=inf['fn_fna']).replace(".gz",""))
+                     fa=inf['fn_fna']))
     return(ret)
 
-rule get_fa_idx:
+rule idx_fa:
     input:
         get_fa
     output:
-        idx_out = "data/input_genomes/{g}/idx.txt"
+        idx_out="data/input_genomes/{g}/{fn_fna}.fna.gz.fai"
     run:
-        cmd = ("~/code/fastatools/target/debug/fastatools "
-               "index "
-               "{fa_input} "
-               "> {output} "
-               "".format(fa_input=input[0],
-                         output=output[0]))
-        shell(cmd)
+        fa_gz = input[0]
+        fa = fa_gz.replace(".gz","")
+        shell("gunzip {fa_gz_in}".format(fa_gz_in=fa_gz))
+        shell("bgzip {fa_gz_in}".format(fa_gz_in=fa))
+        shell("samtools faidx {fa_bz_out}".format(fa_bz_out=fa_gz))
                                     
-rule gunzip_fa:
-    input:
-        fa_gz_in ="data/input_genomes/{g}/{fn_fna}.fna.gz"
-    output:
-        fa_gz_out ="data/input_genomes/{g}/{fn_fna}.fna"
-    shell:
-        "gunzip {input.fa_gz_in}"
-
 rule download:
     output:
-        "data/input_genomes/{g}/{fn_fna}.fna.gz"
+        fa_gz_out="data/input_genomes/{g}/{fn_fna}.fna.gz"
     run:
         ftp_path = config['assemblies'][wildcards.g]["fn_ftp"]
-        shell("wget -O {fn_out} {ftp_path}".format(fn_out=output[0],
+        shell("wget -O {fn_out} {ftp_path}".format(fn_out=output.fa_gz_out,
                                                    ftp_path=ftp_path))
+
+
