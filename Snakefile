@@ -73,12 +73,6 @@ rule extract_locus:
         print(cmd)
         shell(cmd)
 
-        #"odgi extract -E -i /data/out.chr7.10000/chr7.input.fa.gz.e6f73d2.e34d4cd.20398a9.smooth.final.og -o /data/out.chr7.10000/SAMD9_locus_Clint.og -r Clint_PTRv2#NC_036886.1:89120280-89210088"
-        #"odgi sort -O -Y  -i /data/out.chr7.10000/SAMD9_locus_Clint.og -o /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og"
-        #"odgi viz -i /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og -o /data/out.chr7.10000/SAMD9_locus.sorted.png"
-        #"odgi layout -i /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og -o /data/out.chr7.10000/SAMD9_locus_Clint.sorted.lay"
-        #"odgi draw -c /data/out.chr7.10000/SAMD9_locus_Clint.sorted.lay -i /data/out.chr7.10000/SAMD9_locus_Clint.sorted.og -p /data/out.chr7.10000/SAMD9_locus_Clint.2d.png -C"
-
 rule run_pggb:
     input:
         fa_input="data/{contig}.input.fa.gz"
